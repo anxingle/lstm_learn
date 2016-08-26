@@ -1,0 +1,4 @@
+*.pyc
+accuracy.txt
+t10k-*
+train-images-*
