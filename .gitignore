@@ -1,4 +1,5 @@
 *.pyc
 accuracy.txt
+tensorflow/
 t10k-*
 train-images-*
