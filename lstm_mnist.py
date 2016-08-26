@@ -70,7 +70,7 @@ batch_size      = 128
 display_step    = 1
 sess = tf.Session()
 sess.run(init)
-summary_writer = tf.train.SummaryWriter('/tmp/tensorflow_logs', graph=sess.graph)
+summary_writer = tf.train.SummaryWriter('./logs/', graph=sess.graph)
 print ("Start optimization")
 for epoch in range(training_epochs):
     avg_cost = 0.
