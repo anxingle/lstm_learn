@@ -8,13 +8,14 @@ try:
 except ImportError:
 	from tensorflow import nn as ctc
 import numpy as np
-import load_data
+#import load_data
 #import matplotlib.pyplot as plt
 #matplotlib inline 
 print ("Packages imported")
 
 # Load MNIST, our beloved friend
-mnist =  load_data.read_data_sets("/home/a/workspace/ssd/CAPTCHA_mnist/","/home/a/workspace/ssd/captcha_mnist_test", one_hot=True)
+mnist  = input_data.read_data_sets("data/",one_hot=True)
+#mnist =  load_data.read_data_sets("/home/a/workspace/ssd/CAPTCHA_mnist/","/home/a/workspace/ssd/captcha_mnist_test", one_hot=True)
 trainimgs, trainlabels, testimgs, testlabels \
  = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels 
 ntrain, ntest, dim, nclasses \
@@ -69,7 +70,7 @@ seq_len         = nsteps
 learning_rate = 0.001
 x      = tf.placeholder("float", [None, nsteps, diminput])
 istate = tf.placeholder("float", [None, 2*dimhidden]) #state & cell => 2x n_hidden
-y      = tf.sparse_placeholder(shape=(batch_size, dimoutput),dtype=tf.int32)
+y      = tf.sparse_placeholder(shape=(batch_size, dimoutput),dtype=tf.int64)
 myrnn  = _RNN(x, istate, weights, biases, nsteps, 'basic')
 pred   = myrnn['O']
 #**************************************************
