@@ -62,7 +62,7 @@ training_epochs = 40
 batch_size      = 900
 display_step    = 1
 
-
+#**************************************************
 # will be used in CTC_LOSS
 seq_len         = nsteps 
 
@@ -72,6 +72,7 @@ istate = tf.placeholder("float", [None, 2*dimhidden]) #state & cell => 2x n_hidd
 y      = tf.sparse_placeholder(shape=(batch_size, dimoutput),dtype=tf.int32)
 myrnn  = _RNN(x, istate, weights, biases, nsteps, 'basic')
 pred   = myrnn['O']
+#**************************************************
 # we add ctc module
 pred   = tf.reshape(pred,[batch_size,-1,nclasses])
 pred   = tf.transpose(pred,(1,0,2))
@@ -84,7 +85,8 @@ loss   = ctc.ctc_loss(pred,y,seq_len)
 cost   = tf.reduce_mean(loss)
 
 optm   = tf.train.AdamOptimizer(learning_rate).minimize(cost) # Adam Optimizer
-# 
+#**************************************************
+#Decode the best path
 decoded,log_prob = ctc.ctc_greedy_decoder(pred,seq_len)
 accr   = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0],tf.int32),y))
 #accr   = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(pred,1), tf.argmax(y,1)), tf.float32))
