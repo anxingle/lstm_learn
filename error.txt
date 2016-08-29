@@ -1,0 +1,20 @@
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcublas.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcudnn.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcufft.so locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcuda.so.1 locally
+I tensorflow/stream_executor/dso_loader.cc:108] successfully opened CUDA library libcurand.so locally
+Packages imported
+MNIST loaded
+Network ready
+Traceback (most recent call last):
+  File "lstm_ctc_mnist.py", line 72, in <module>
+    y      = tf.sparse_placeholder(shape=(batch_size, dimoutput),dtype=tf.int32)
+  File "/usr/local/lib/python2.7/dist-packages/tensorflow/python/ops/array_ops.py", line 1330, in sparse_placeholder
+    shape=shape
+  File "/usr/local/lib/python2.7/dist-packages/tensorflow/python/framework/ops.py", line 974, in __init__
+    shape = convert_to_tensor(shape, name="shape", dtype=dtypes.int64)
+  File "/usr/local/lib/python2.7/dist-packages/tensorflow/python/framework/ops.py", line 621, in convert_to_tensor
+    ret = conversion_func(value, dtype=dtype, name=name, as_ref=as_ref)
+  File "/usr/local/lib/python2.7/dist-packages/tensorflow/python/framework/ops.py", line 564, in _TensorTensorConversionFunction
+    % (dtype.name, t.dtype.name, str(t)))
+ValueError: Tensor conversion requested dtype int64 for Tensor with dtype int32: 'Tensor("Const:0", shape=(2,), dtype=int32)'

@@ -19,6 +19,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import load_captcha as load
 import gzip
 
 import numpy
@@ -28,7 +29,6 @@ from tensorflow.contrib.learn.python.learn.datasets import base
 from tensorflow.python.framework import dtypes
 from tensorflow.python.platform import gfile
 
-SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 
 
 def _read32(bytestream):
@@ -165,30 +165,14 @@ class DataSet(object):
 
 
 def read_data_sets(train_dir,
+                   test_dir,
                    one_hot=False,
                    dtype=dtypes.float32,
                    reshape=True,
                    validation_size=5000):
-  TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
-  TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
-  TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
-  TEST_LABELS = 't10k-labels-idx1-ubyte.gz'
+  train_images,train_labels = load.read_data(train_dir,one_hot)
 
-  local_file = base.maybe_download(TRAIN_IMAGES, train_dir,
-                                   SOURCE_URL + TRAIN_IMAGES)
-  train_images = extract_images(local_file)
-
-  local_file = base.maybe_download(TRAIN_LABELS, train_dir,
-                                   SOURCE_URL + TRAIN_LABELS)
-  train_labels = extract_labels(local_file, one_hot=one_hot)
-
-  local_file = base.maybe_download(TEST_IMAGES, train_dir,
-                                   SOURCE_URL + TEST_IMAGES)
-  test_images = extract_images(local_file)
-
-  local_file = base.maybe_download(TEST_LABELS, train_dir,
-                                   SOURCE_URL + TEST_LABELS)
-  test_labels = extract_labels(local_file, one_hot=one_hot)
+  test_images,test_labels   = load.read_data(test_dir,one_hot) 
 
   if not 0 <= validation_size <= len(train_images):
     raise ValueError(

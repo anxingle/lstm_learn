@@ -3,6 +3,10 @@
 # Import packages
 import tensorflow as tf
 import tensorflow.examples.tutorials.mnist.input_data as input_data
+try:
+	import tensorflow.contrib.ctc as ctc
+except ImportError:
+	from tensorflow import nn as ctc
 import numpy as np
 import load_data
 #import matplotlib.pyplot as plt
@@ -53,22 +57,42 @@ def _RNN(_X, _istate, _W, _b, _nsteps, _name):
     }
 print ("Network ready")
 
-learning_rate = 0.001
-x      = tf.placeholder("float", [None, nsteps, diminput])
-istate = tf.placeholder("float", [None, 2*dimhidden]) #state & cell => 2x n_hidden
-y      = tf.placeholder("float", [None, dimoutput])
-myrnn  = _RNN(x, istate, weights, biases, nsteps, 'basic')
-pred   = myrnn['O']
-cost   = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y)) 
-optm   = tf.train.AdamOptimizer(learning_rate).minimize(cost) # Adam Optimizer
-accr   = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(pred,1), tf.argmax(y,1)), tf.float32))
-init   = tf.initialize_all_variables()
-print ("Network Ready!")
-
 
 training_epochs = 40
 batch_size      = 900
 display_step    = 1
+
+
+# will be used in CTC_LOSS
+seq_len         = nsteps 
+
+learning_rate = 0.001
+x      = tf.placeholder("float", [None, nsteps, diminput])
+istate = tf.placeholder("float", [None, 2*dimhidden]) #state & cell => 2x n_hidden
+y      = tf.sparse_placeholder(shape=(batch_size, dimoutput),dtype=tf.int32)
+myrnn  = _RNN(x, istate, weights, biases, nsteps, 'basic')
+pred   = myrnn['O']
+# we add ctc module
+pred   = tf.reshape(pred,[batch_size,-1,nclasses])
+pred   = tf.transpose(pred,(1,0,2))
+y      = tf.reshape(y,[batch_size,-1,nclasses])
+y      = tf.transpose(pred,(1,0,2))
+
+loss   = ctc.ctc_loss(pred,y,seq_len)
+
+#cost   = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y)) 
+cost   = tf.reduce_mean(loss)
+
+optm   = tf.train.AdamOptimizer(learning_rate).minimize(cost) # Adam Optimizer
+# 
+decoded,log_prob = ctc.ctc_greedy_decoder(pred,seq_len)
+accr   = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0],tf.int32),y))
+#accr   = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(pred,1), tf.argmax(y,1)), tf.float32))
+init   = tf.initialize_all_variables()
+print ("Network Ready!")
+
+
+
 sess = tf.Session()
 sess.run(init)
 summary_writer = tf.train.SummaryWriter('./logs/', graph=sess.graph)
