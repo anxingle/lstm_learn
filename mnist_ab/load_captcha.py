@@ -56,6 +56,7 @@ def read_images(train_dir,length_label):
             image_label[1] = 11
         else:
             image_label[1] = image_name[1]
+        #label.append(image_label)
         label[loop] = image_label 
     return data,label
 
