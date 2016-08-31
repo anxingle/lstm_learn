@@ -56,17 +56,18 @@ def _RNN(_X, _istate, _W, _b, _nsteps, _name):
     }
 
 # Load MNIST, our beloved friend
-mnist = load_data.read_data_sets("/mnt/d/study/mnist_ab/",\
-                         "/mnt/d/study/mnist_ab_test/",one_hot=False,num_class=12)
+mnist = load_data.read_data_sets("/home/a/workspace/ssd/mnist_ab/",\
+                         "/home/a/workspace/ssd/mnist_ab_test/",one_hot=False,num_class=12)
 trainimgs, trainlabels, testimgs, testlabels = mnist.train.images,\
                                                mnist.train.labels,\
                                                mnist.test.images,\
                                                mnist.test.labels
 
-ntrain, ntest, dim = trainimgs.shape[0],\
-                     testimgs.shape[0],\
-                     trainimgs.shape[1]
-nclasses = 10
+ntrain, ntest, dim, nclasses \
+ = trainimgs.shape[0], testimgs.shape[0], trainimgs.shape[1], trainlabels.shape[1]
+print "ntrain:  ",ntrain
+print "dim:     ",dim
+print "nclasses: ",nclasses
 
 print ("MNIST loaded")
 
@@ -99,7 +100,8 @@ with graph.as_default():
     # will be used in CTC_LOSS
     x = tf.placeholder(tf.float32, [None, nsteps, diminput])
     istate = tf.placeholder(tf.float32, [None, 2*dimhidden]) #state & cell => 2x n_hidden
-    y = tf.sparse_placeholder(tf.int32)
+    y  = tf.placeholder("float",[None,dimoutput])
+    #y = tf.sparse_placeholder(tf.int32)
     # 1d array of size [batch_size]
     # Seq len indicates the quantity of true data in the input, since when working with batches we have to pad with zeros to fit the input in a matrix
     seq_len = tf.placeholder(tf.int32, [None])
@@ -109,16 +111,19 @@ with graph.as_default():
     #**************************************************
     # we add ctc module
 
-    loss = ctc.ctc_loss(pred, y, seq_len)
+    #loss = ctc.ctc_loss(pred, y, seq_len)
 
-    cost = tf.reduce_mean(loss)
+    #cost = tf.reduce_mean(loss)
+    cost   = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
+    #cost  = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred,y))
 
     # Adam Optimizer
     optm = tf.train.AdamOptimizer(learning_rate).minimize(cost)
     #Decode the best path
-    decoded, log_prob = ctc.ctc_greedy_decoder(pred, seq_len)
-    accr = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32), y))
-    init = tf.initialize_all_variables()
+    #decoded, log_prob = ctc.ctc_greedy_decoder(pred, seq_len)
+    #accr = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32), y))
+    accr  = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(pred,1),tf.argmax(y,1)),tf.float32))
+    init  = tf.initialize_all_variables()
     print ("Network Ready!")
 
 
@@ -134,9 +139,12 @@ with tf.Session(graph=graph) as sess:
             batch_xs, batch_ys = mnist.train.next_batch(batch_size)
             batch_xs = batch_xs.reshape((batch_size, nsteps, diminput))
             # Fit training using batch data
+            '''
             feed_dict={x: batch_xs, y: sparse_tuple_from([[value] for value in batch_ys]),\
                                          istate: np.zeros((batch_size, 2*dimhidden)), \
                                          seq_len: [nsteps for _ in xrange(batch_size)]}
+            '''
+            feed_dict={x: batch_xs, y: batch_ys, istate: np.zeros((batch_size, 2*dimhidden))}
 
             _, batch_cost = sess.run([optm, cost], feed_dict=feed_dict)
             # Compute average loss
@@ -152,7 +160,7 @@ with tf.Session(graph=graph) as sess:
             print (" Training label error rate: %.3f" % (train_acc))
             testimgs = testimgs.reshape((ntest, nsteps, diminput))
 
-            feed_dict={x: testimgs, y: sparse_tuple_from([[value] for value in testlabels]), istate: np.zeros((ntest, 2*dimhidden)), seq_len: [nsteps for _ in xrange(len(testimgs))]}
+            feed_dict={x: testimgs, y: testlabels, istate: np.zeros((ntest, 2*dimhidden))}
             test_acc = sess.run(accr, feed_dict=feed_dict)
             print (" Test label error rate: %.3f" % (test_acc))
 print ("Optimization Finished.")

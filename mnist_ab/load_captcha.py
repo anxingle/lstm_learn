@@ -31,7 +31,7 @@ def read_images(train_dir,length_label):
     data  = np.zeros((data_volume,ROW,COL,depth))
     # label.shape = (volume,row,col,depth)
     #label = np.zeros((data_volume,1))
-    label = np.zeros((data_volume,1,1))
+    label = np.zeros((data_volume,2))
     for loop in xrange(data_volume):
         image_name  =  images[images_list[loop]]
         image       =  os.path.join(train_dir,image_name)
@@ -43,15 +43,16 @@ def read_images(train_dir,length_label):
         image_name  =  image_name.split('.')[0]
         image_name  =  image_name.split('_')[1]
         #image_label =  image_name[:]
-        if image_name[0] == 'a':
+        image_label = [0,0]
+        if image_name[0] == 'A':
             image_label[0] = 10
-        elif image_name[0] == 'b':
+        elif image_name[0] == 'B':
             image_label[0] = 11
         else:
             image_label[0] = image_name[0] 
-        if image_name[1] == 'a':
+        if image_name[1] == 'A':
             image_label[1] = 10
-        elif image_name[1] == 'b':
+        elif image_name[1] == 'B':
             image_label[1] = 11
         else:
             image_label[1] = image_name[1]
