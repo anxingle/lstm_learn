@@ -25,6 +25,7 @@ diminput  = 28
 dimhidden = 128
 dimoutput = nclasses
 nsteps    = 28
+num_layers = 2
 weights = {
     'hidden': tf.Variable(tf.random_normal([diminput, dimhidden])), 
     'out': tf.Variable(tf.random_normal([dimhidden, dimoutput]))
@@ -33,7 +34,7 @@ biases = {
     'hidden': tf.Variable(tf.random_normal([dimhidden])),
     'out': tf.Variable(tf.random_normal([dimoutput]))
 }
-def _RNN(_X, _istate, _W, _b, _nsteps, _name):
+def _RNN(_X, _istate, _W, _b,num_layers,_nsteps, _name):
     # 1. Permute input from [batchsize, nsteps, diminput] => [nsteps, batchsize, diminput]
     _X = tf.transpose(_X, [1, 0, 2])
     # 2. Reshape input to [nsteps*batchsize, diminput] 
@@ -45,7 +46,10 @@ def _RNN(_X, _istate, _W, _b, _nsteps, _name):
     # 5. Get LSTM's final output (_O) and state (_S)
     #    Both _O and _S consist of 'batchsize' elements
     with tf.variable_scope(_name):
-        lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(dimhidden, forget_bias=1.0)
+        lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(dimhidden,\
+                                     forget_bias=1.0)
+        lstm_cell = tf.nn.rnn_cell.MultiRNNCell([lstm_cell]*num_layers,\
+                                     state_is_tuple=True)
         _LSTM_O, _LSTM_S = tf.nn.rnn(lstm_cell, _Hsplit, initial_state=_istate)
     # 6. Output
     _O = tf.matmul(_LSTM_O[-1], _W['out']) + _b['out']    
@@ -60,7 +64,7 @@ learning_rate = 0.01
 x      = tf.placeholder("float", [None, nsteps, diminput])
 istate = tf.placeholder("float", [None, 2*dimhidden]) #state & cell => 2x n_hidden
 y      = tf.placeholder("float", [None, dimoutput])
-myrnn  = _RNN(x, istate, weights, biases, nsteps, 'basic')
+myrnn  = _RNN(x, istate, weights, biases,num_layers,nsteps, 'basic')
 pred   = myrnn['O']
 cost   = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y)) 
 optm   = tf.train.AdamOptimizer(learning_rate).minimize(cost) # Adam Optimizer
