@@ -34,7 +34,7 @@ def sparse_tuple_from(sequences, dtype=np.int32):
 
     return indices, values, shape
 
-def _RNN(_X, _istate, _W, _b, _nsteps, _name):
+def _RNN(_X,batch_size, _W, _b,num_layers,_nsteps, _name):
     # 1. Permute input from [batchsize, nsteps, diminput] => [nsteps, batchsize, diminput]
     _X = tf.transpose(_X, [1, 0, 2])
     # 2. Reshape input to [nsteps*batchsize, diminput]
@@ -46,8 +46,13 @@ def _RNN(_X, _istate, _W, _b, _nsteps, _name):
     # 5. Get LSTM's final output (_O) and state (_S)
     #    Both _O and _S consist of 'batchsize' elements
     with tf.variable_scope(_name):
-        lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(dimhidden, forget_bias=1.0)
-        _LSTM_O, _LSTM_S = tf.nn.rnn(lstm_cell, _Hsplit, initial_state=_istate)
+        lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(dimhidden, \
+        	                             forget_bias=1.0)
+        lstm_cell = tf.nn.rnn_cell.MultiRNNCell([lstm_cell]*num_layers,\
+        	                             state_is_tuple=True)
+        state     = lstm_cell.zero_state(batch_size,dtype=tf.float32)
+        _LSTM_O, _LSTM_S = tf.nn.rnn(lstm_cell, _Hsplit, \
+        	                             initial_state=state)
     # 6. Output
     _O = [tf.matmul(x, _W['out']) + _b['out'] for x in _LSTM_O]
     _O = tf.pack(_O)
@@ -75,14 +80,15 @@ print "nclasses: ",nclasses
 print ("MNIST loaded")
 
 # Training params
-training_epochs = 300
-batch_size = 1000
-display_step = 20
-learning_rate = 0.01
+training_epochs =  300
+batch_size      =  1000
+display_step    =  20
+learning_rate   =  0.01
+num_layers      =  2
 
 # Recurrent neural network params
 diminput = 28
-dimhidden = 128
+dimhidden = 4
 # here we add the blank label
 dimoutput = nclasses+1
 print "dimoutput:   ",dimoutput
@@ -102,15 +108,17 @@ with graph.as_default():
 
     #**************************************************
     # will be used in CTC_LOSS
-    x = tf.placeholder(tf.float32, [None, nsteps, diminput])
-    istate = tf.placeholder(tf.float32, [None, 2*dimhidden]) #state & cell => 2x n_hidden
+    #x = tf.placeholder(tf.float32, [None, nsteps, diminput])
+    x = tf.placeholder(tf.float32, [batch_size, nsteps, diminput])
+    istate = tf.placeholder(tf.float32, [batch_size, 2*dimhidden]) #state & cell => 2x n_hidden
+    #istate = tf.placeholder(tf.float32, [None, 2*dimhidden]) #state & cell => 2x n_hidden
     #y  = tf.placeholder("float",[None,dimoutput])
     y = tf.sparse_placeholder(tf.int32)
     # 1d array of size [batch_size]
     # Seq len indicates the quantity of true data in the input, since when working with batches we have to pad with zeros to fit the input in a matrix
     seq_len = tf.placeholder(tf.int32, [None])
 
-    myrnn = _RNN(x, istate, weights, biases, nsteps, 'basic')
+    myrnn = _RNN(x,batch_size, weights, biases,num_layers,nsteps, 'basic')
     pred = myrnn['O']
     #**************************************************
     # we add ctc module
@@ -142,9 +150,11 @@ with tf.Session(graph=graph) as sess:
             batch_xs, batch_ys = mnist.train.next_batch(batch_size)
             batch_xs = batch_xs.reshape((batch_size, nsteps, diminput))
             # Fit training using batch data
+            #feed_dict={x: batch_xs, y: sparse_tuple_from([[value] for value in batch_ys]),\
+            #                             istate: np.zeros((batch_size, 2*dimhidden)), \
+            #                             seq_len: [nsteps for _ in xrange(batch_size)]}
             feed_dict={x: batch_xs, y: sparse_tuple_from([[value] for value in batch_ys]),\
-                                         istate: np.zeros((batch_size, 2*dimhidden)), \
-                                         seq_len: [nsteps for _ in xrange(batch_size)]}
+                                         seq_len: [nsteps for _ in xrange(batch_size)]} 
             '''
             feed_dict={x: batch_xs, y: batch_ys, istate: np.zeros((batch_size, 2*dimhidden))}
             '''
@@ -159,11 +169,13 @@ with tf.Session(graph=graph) as sess:
 
 
             train_acc = sess.run(accr, feed_dict=feed_dict)
-            print (" Training label error rate: %.3f" % (train_acc))
-            testimgs = testimgs.reshape((ntest, nsteps, diminput))
+            print ("    Training    label    error   rate:   %.3f" % (train_acc))
+            #testimgs = testimgs.reshape((ntest, nsteps, diminput))
+            batch_txs,batch_tys = mnist.test.next_batch(batch_size)
+            batch_txs = batch_txs.reshape((batch_size,nsteps,diminput))
 
-            feed_dict={x: testimgs, y: sparse_tuple_from([[value] for value in testlabels]), \
-                                 istate: np.zeros((ntest, 2*dimhidden)),seq_len: [nsteps for _ in xrange(len(testimgs))]}
+            feed_dict={x:batch_txs, y: sparse_tuple_from([[value] for value in batch_tys]), \
+                                 seq_len: [nsteps for _ in xrange(batch_size)]}
             test_acc = sess.run(accr, feed_dict=feed_dict)
             print (" Test label error rate: %.3f" % (test_acc))
 print ("Optimization Finished.")
