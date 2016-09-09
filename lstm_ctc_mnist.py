@@ -2,13 +2,13 @@
 # coding=utf-8
 # Import packages
 import tensorflow as tf
-import tensorflow.examples.tutorials.mnist.input_data as input_data
+import tensorflow.examples.tutorials.mnist.input_data as input_
 try:
     import tensorflow.contrib.ctc as ctc
 except ImportError:
     from tensorflow import nn as ctc
 import numpy as np
-import load_data
+#import load_data
 
 print ("Packages imported")
 
@@ -65,7 +65,7 @@ def _RNN(_X,batch_size, _W, _b,num_layers,_nsteps, _name):
     }
 
 # Load MNIST, our beloved friend
-mnist = input_data.read_data_sets("data/",one_hot=False)
+mnist = input_.read_data_sets("data/",one_hot=False)
 trainimgs, trainlabels, testimgs, testlabels = mnist.train.images,\
                                                mnist.train.labels,\
                                                mnist.test.images,\
@@ -82,14 +82,14 @@ print ("MNIST loaded")
 
 # Training params
 training_epochs =  300
-batch_size      =  1000
+batch_size      =  1
 display_step    =  20
-learning_rate   =  0.01
+learning_rate   =  0.001
 num_layers      =  2
 
 # Recurrent neural network params
 diminput = 28
-dimhidden = 4
+dimhidden = 128
 # here we add the blank label
 dimoutput = nclasses+1
 print "dimoutput:   ",dimoutput
@@ -145,7 +145,8 @@ with tf.Session(graph=graph) as sess:
     print ("Start optimization")
     for epoch in range(training_epochs):
         avg_cost = 0.
-        total_batch = int(mnist.train.num_examples/batch_size)*2
+        #total_batch = int(mnist.train.num_examples/batch_size)
+        total_batch = 1
         # Loop over all batches
         for i in range(total_batch):
             batch_xs, batch_ys = mnist.train.next_batch(batch_size)
@@ -156,10 +157,18 @@ with tf.Session(graph=graph) as sess:
             #                             seq_len: [nsteps for _ in xrange(batch_size)]}
             feed_dict={x: batch_xs, y: sparse_tuple_from([[value] for value in batch_ys]),\
                                          seq_len: [nsteps for _ in xrange(batch_size)]} 
-            '''
-            feed_dict={x: batch_xs, y: batch_ys, istate: np.zeros((batch_size, 2*dimhidden))}
-            '''
+
             _, batch_cost = sess.run([optm, cost], feed_dict=feed_dict)
+            #origin = sess.run(y,feed_dict=feed_dict)
+            origin = batch_ys[0]
+            cost_y = sess.run(decoded[0],feed_dict=feed_dict)
+            print "origin is :                       ",origin
+            print "cost_y is :                       ",cost_y[1]
+            print "True or False:                    ",cost_y[1] == 0
+            print "Type of cost_y is:      ",type(cost_y[1])
+            tem = np.array([0])
+            print "temp is :  ",int(tem)
+            print "             \n\n"
             # Compute average loss
             avg_cost += batch_cost*batch_size
             #print "COST_pred shape is :",pred.shape
