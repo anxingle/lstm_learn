@@ -9,6 +9,7 @@ except ImportError:
 	from tensorflow import nn as ctc
 import numpy as np
 import load_data
+
 print ("Packages imported")
 
 def sparse_tuple_from(sequences, dtype=np.int32):

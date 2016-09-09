@@ -21,11 +21,12 @@ trainimgs, trainlabels, testimgs, testlabels \
 ntrain, ntest, dim, nclasses \
  = trainimgs.shape[0], testimgs.shape[0], trainimgs.shape[1], trainlabels.shape[1]
 print ("MNIST loaded")
+print "nclasses:  ",nclasses
 
 # Recurrent neural network 
 diminput  = 28
 dimhidden = 128
-dimoutput = nclasses
+dimoutput = nclasses+1
 nsteps    = 28
 weights = {
     'hidden': tf.Variable(tf.random_normal([diminput, dimhidden])), 
