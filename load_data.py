@@ -1,17 +1,5 @@
-# Copyright 2016 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+#!/usr/bin/env python
+# coding=utf-8
 
 """Functions for downloading and reading MNIST data."""
 
@@ -106,10 +94,13 @@ class DataSet(object):
 
       # Convert shape from [num examples, rows, columns, depth]
       # to [num examples, rows*columns] (assuming depth == 1)
+      #XXX:  load_captcha.py has ReShape it !
+      #XXX:对应于 load_captcha.py 中按列组织图像数据
       if reshape:
-        assert images.shape[3] == 1
-        images = images.reshape(images.shape[0],
-                                images.shape[1] * images.shape[2])
+        assert images.shape[1] == 9600,(
+          'image row*col is not 9600********************************')
+        #images = images.reshape(images.shape[0],
+        #                        images.shape[1] * images.shape[2])
       if dtype == dtypes.float32:
         # Convert from [0, 255] -> [0.0, 1.0].
         images = images.astype(numpy.float32)
@@ -167,6 +158,7 @@ class DataSet(object):
 def read_data_sets(train_dir,
                    test_dir,
                    one_hot=False,
+                   length_label=1,num_class=10,
                    dtype=dtypes.float32,
                    reshape=True,
                    validation_size=5000):
@@ -185,6 +177,7 @@ def read_data_sets(train_dir,
   train_labels = train_labels[validation_size:]
 
   train = DataSet(train_images, train_labels, dtype=dtype, reshape=reshape)
+  
   validation = DataSet(validation_images,
                        validation_labels,
                        dtype=dtype,

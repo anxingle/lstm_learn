@@ -10,8 +10,8 @@ import load_data
 print ("Packages imported")
 
 # Load MNIST, our beloved friend
-mnist =  load_data.read_data_sets("/mnt/d/workspace/ubuntu/workspace/captcha_mnist/",
-                   "/mnt/d/workspace/ubuntu/workspace/captcha_mnist", one_hot=True,validation_size=50)
+mnist =  load_data.read_data_sets("/home/a/workspace/ssd/DataSets/mnist",
+                   "/home/a/workspace/ssd/DataSets/mnist_test", one_hot=False,validation_size=5000)
 trainimgs, trainlabels, testimgs, testlabels \
  = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels 
 ntrain, ntest, dim, nclasses \
@@ -19,10 +19,10 @@ ntrain, ntest, dim, nclasses \
 print ("MNIST loaded")
 
 # Recurrent neural network 
-diminput  = 28
+diminput  = 80
 dimhidden = 128
 dimoutput = nclasses
-nsteps    = 28
+nsteps    = 120
 weights = {
     'hidden': tf.Variable(tf.random_normal([diminput, dimhidden])), 
     'out': tf.Variable(tf.random_normal([dimhidden, dimoutput]))
@@ -68,7 +68,7 @@ print ("Network Ready!")
 
 
 training_epochs = 100
-batch_size      = 20
+batch_size      = 1000
 display_step    = 1
 sess = tf.Session()
 sess.run(init)
