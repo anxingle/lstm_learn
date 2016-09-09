@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # coding=utf-8
+
 import numpy as np
 import struct
 import os
 import cv2
 import random
 
-ROW   = 28
-COL   = 28
+ROW   = 80
+COL   = 120
 depth = 1
 
 
@@ -18,7 +19,7 @@ def dense_to_one_hot(labels_dense, num_classes):
   labels_one_hot = np.zeros((num_labels, num_classes))
   labels_one_hot.flat[[index_offset + labels_dense.ravel()]] = 1
   return labels_one_hot
-def read_images(train_dir,length_label):
+def read_images(train_dir):
     images = os.listdir(train_dir)
     # volume of data_set (train_dir)
     data_volume = len(images)
@@ -28,42 +29,46 @@ def read_images(train_dir,length_label):
     random.shuffle(images_list)
     # return to the main Call function
     # data.shape  = (volume,row,col,depth)
-    data  = np.zeros((data_volume,ROW,COL,depth))
+    data  = np.zeros((data_volume,ROW*COL))
     # label.shape = (volume,row,col,depth)
     #label = np.zeros((data_volume,1))
-    label = np.zeros((data_volume,2))
+    label = np.zeros((data_volume,1))
+    #当label长度不是5的时候
+    #label = np.zeros((data_volume,5))
     for loop in xrange(data_volume):
         image_name  =  images[images_list[loop]]
         image       =  os.path.join(train_dir,image_name)
         img         =  cv2.imread(image,cv2.IMREAD_GRAYSCALE)
-        img         =  img.reshape((ROW,COL,depth))
+        #XXX: I want to feed data by COL
+        #XXX: 按列来组织图片数据
+
+        img         =  img.transpose(1,0)
+        img         =  img.reshape((ROW*COL))
+        #img         =  img.reshape((ROW,COL,depth))
         data[loop]  =  img
 
         image_name  =  image_name.strip()
         image_name  =  image_name.split('.')[0]
         image_name  =  image_name.split('_')[1]
-        #image_label =  image_name[:]
-        image_label = [0,0]
-        if image_name[0] == 'A':
-            image_label[0] = 10
-        elif image_name[0] == 'B':
-            image_label[0] = 11
-        else:
-            image_label[0] = image_name[0] 
-        if image_name[1] == 'A':
-            image_label[1] = 10
-        elif image_name[1] == 'B':
-            image_label[1] = 11
-        else:
-            image_label[1] = image_name[1]
+        image_label =  image_name[:]
+        #当label长度不是5的时候
+        '''
+        image_label = [0,0,0,0,0]
+        length_name = len(image_name)
+        for i in xrange(length_name):
+            image_label[i] = image_name[i]
+        if  length_name != 5:
+            for j in xrange(length_name,5):
+                image_label[i] = 10
         #label.append(image_label)
+        '''
         label[loop] = image_label 
     return data,label
 
 
-def read_data(train_dir,one_hot=True,length_label=1,num_class=10,reshape=True):
+def read_data(train_dir,one_hot=False,reshape=True):
 #def read_data(train_dir,one_hot=True,dtype=dtypes.float32,reshape=True):
-    train_images,train_labels = read_images(train_dir,length_label)
+    train_images,train_labels = read_images(train_dir)
     if one_hot:
         train_labels = dense_to_one_hot(train_labels,num_class)
     return train_images,train_labels
