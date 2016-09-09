@@ -51,11 +51,12 @@ def _RNN(_X, batch_size, _W, _b,num_layers,_nsteps, _name):
     with tf.variable_scope(_name):
         lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(dimhidden,\
                                      forget_bias=1.0)
-        lstm_cell = tf.nn.rnn_cell.MultiRNNCell([lstm_cell]*2,\
+        lstm_cell = tf.nn.rnn_cell.MultiRNNCell([lstm_cell]*num_layers,\
                                      state_is_tuple=True)
         print "print tf.nn.rnn......"
         state = lstm_cell.zero_state(batch_size,dtype=tf.float32)
-        _LSTM_O, _LSTM_S = tf.nn.rnn(lstm_cell, _Hsplit, initial_state=state)
+        _LSTM_O, _LSTM_S = tf.nn.rnn(lstm_cell, _Hsplit, \
+                                     initial_state=state)
         #_LSTM_O, _LSTM_S = tf.nn.rnn(lstm_cell, _Hsplit, initial_state=_istate)
         print "all is done..........."
     # 6. Output

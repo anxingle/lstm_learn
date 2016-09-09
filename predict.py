@@ -5,13 +5,22 @@ import tensorflow as tf
 import tensorflow.examples.tutorials.mnist.input_data as input_data
 import numpy as np
 import load_data
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import argparse
 #matplotlib inline 
 print ("Packages imported")
 
+def parse_args1():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("pr")
+    #parser.add_argument("-name","--names_print")
+    #parser.add_argument("-inc","--increments")
+    #print parser.pr
+    return parser.parse_args()
+args1 = parse_args1()
 # Load MNIST, our beloved friend
-mnist =  load_data.read_data_sets("/mnt/d/workspace/ubuntu/workspace/captcha_mnist/",
-                   "/mnt/d/workspace/ubuntu/workspace/captcha_mnist", one_hot=True,validation_size=50)
+mnist =  load_data.read_data_sets("/mnt/d/workspace/ubuntu/workspace/ocr/"+args1.pr,
+                   "/mnt/d/workspace/ubuntu/workspace/ocr/"+args1.pr, one_hot=True,validation_size=1)
 trainimgs, trainlabels, testimgs, testlabels \
  = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels 
 ntrain, ntest, dim, nclasses \
@@ -67,8 +76,7 @@ init   = tf.initialize_all_variables()
 print ("Network Ready!")
 
 
-training_epochs = 100
-batch_size      = 20
+batch_size      = 1
 display_step    = 1
 sess = tf.Session()
 sess.run(init)
@@ -76,29 +84,18 @@ summary_writer = tf.train.SummaryWriter('./logs/', graph=sess.graph)
 # added by siler :to save model
 saver = tf.train.Saver()
 print ("Start optimization")
-for epoch in range(training_epochs):
-    avg_cost = 0.
-    total_batch = int((mnist.train.num_examples/batch_size)/10)
-    # Loop over all batches
-    for i in range(total_batch):
-        batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-        batch_xs = batch_xs.reshape((batch_size, nsteps, diminput))
-        # Fit training using batch data
-        sess.run(optm, feed_dict={x: batch_xs, y: batch_ys, istate: np.zeros((batch_size, 2*dimhidden))})
-        # Compute average loss
-        avg_cost += sess.run(cost, feed_dict={x: batch_xs, y: batch_ys 
-                                              , istate: np.zeros((batch_size, 2*dimhidden))})/total_batch
-        print ""
-#        print "COST_pred shape is :",pred
-    # Display logs per epoch step
-    if epoch % display_step == 0: 
-        print ("Epoch: %03d/%03d cost: %.9f" % (epoch, training_epochs, avg_cost))
-        train_acc = sess.run(accr, feed_dict={x: batch_xs, y: batch_ys, istate: np.zeros((batch_size, 2*dimhidden))})
-        print (" Training accuracy: %.3f" % (train_acc))
-        testimgs = testimgs.reshape((ntest, nsteps, diminput))
-        test_acc = sess.run(accr, feed_dict={x: testimgs, y: testlabels, istate: np.zeros((ntest, 2*dimhidden))})
-        print (" Test accuracy: %.3f" % (test_acc))
-        # added by siler :to save model
-        saver.save(sess,'./logs/mnist.tfmodel',epoch)
+continue_test = raw_input("continue test--True or False: ")
+saver.restore(sess,'./logs/mnist.tfmodel-99')
+while continue_test == '1':
+    batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+    batch_xs = batch_xs.reshape((batch_size, nsteps, diminput))
+
+    prediction,y_= sess.run([tf.argmax(pred,1),tf.argmax(y,1)],feed_dict=
+              {x:batch_xs,y:batch_ys,istate: np.zeros((batch_size, 2*dimhidden))})
+    print " Prediction is: ",prediction
+    print "Y           is:  ",y_
+    print "shape of pre:   ",prediction.shape
+    continue_test = raw_input("continue test:True or False ")
+
 print ("Optimization Finished.")
 

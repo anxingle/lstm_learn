@@ -1,0 +1,6 @@
+model_checkpoint_path: "mnist.tfmodel-99"
+all_model_checkpoint_paths: "mnist.tfmodel-95"
+all_model_checkpoint_paths: "mnist.tfmodel-96"
+all_model_checkpoint_paths: "mnist.tfmodel-97"
+all_model_checkpoint_paths: "mnist.tfmodel-98"
+all_model_checkpoint_paths: "mnist.tfmodel-99"
