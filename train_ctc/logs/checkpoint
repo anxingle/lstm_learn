@@ -1,0 +1,6 @@
+model_checkpoint_path: "train_ctc.tfmodel-360"
+all_model_checkpoint_paths: "train_ctc.tfmodel-320"
+all_model_checkpoint_paths: "train_ctc.tfmodel-330"
+all_model_checkpoint_paths: "train_ctc.tfmodel-340"
+all_model_checkpoint_paths: "train_ctc.tfmodel-350"
+all_model_checkpoint_paths: "train_ctc.tfmodel-360"

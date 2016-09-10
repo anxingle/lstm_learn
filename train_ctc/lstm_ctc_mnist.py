@@ -26,12 +26,19 @@ def sparse_tuple_from(sequences, dtype=np.int32):
     for n, seq in enumerate(sequences):
         indices.extend(zip([n]*(seq[0].shape[0]), xrange((seq[0].shape[0]))))
         #print "length is :   ",seq[0].shape[0],"  seq is:   ",seq[0][0]," seq type is: ",type(seq[0][0])
+        #print "seq[0][0] is :   ",seq[0][0]
+        #print "seq[0][1] is :   ",seq[0][1]
         values.extend([seq[0][0]])
         values.extend([seq[0][1]])
+        values.extend([seq[0][2]])
+        values.extend([seq[0][3]])
 
     indices = np.asarray(indices, dtype=np.int64)
     values = np.asarray(values, dtype=dtype)
     shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1]+1], dtype=np.int64)
+    #print "indices: ",indices
+    #print "values : ",values
+    #print "shape  : ",shape
 
     return indices, values, shape
 
@@ -64,8 +71,8 @@ def _RNN(_X,batch_size, _W, _b,num_layers,_nsteps, _name):
     }
 
 # Load MNIST, our beloved friend
-mnist = load_data.read_data_sets("/home/a/workspace/ssd/mnist_ab/",\
-                         "/home/a/workspace/ssd/mnist_ab_test/",one_hot=False,num_class=12)
+mnist = load_data.read_data_sets("/home/a/workspace/ssd/DataSets/mnist_2/",\
+                         "/home/a/workspace/ssd/DataSets/mnist_2_test/",one_hot=False)
 trainimgs, trainlabels, testimgs, testlabels = mnist.train.images,\
                                                mnist.train.labels,\
                                                mnist.test.images,\
@@ -75,25 +82,25 @@ ntrain, ntest, dim, nclasses \
  = trainimgs.shape[0], testimgs.shape[0], trainimgs.shape[1], trainlabels.shape[1]
 print "ntrain:  ",ntrain
 print "dim:     ",dim
-nclasses = 12
 print "nclasses: ",nclasses
+nclasses = 10
 
 print ("MNIST loaded")
 
 # Training params
-training_epochs =  300
+training_epochs =  5000
 batch_size      =  1000
-display_step    =  20
-learning_rate   =  0.01
-num_layers      =  2
+display_step    =  10
+learning_rate   =  0.001
+num_layers      =  1
 
 # Recurrent neural network params
-diminput = 28
-dimhidden = 4
+diminput = 80
+dimhidden = 100
 # here we add the blank label
 dimoutput = nclasses+1
 print "dimoutput:   ",dimoutput
-nsteps = 28
+nsteps = 120
 
 graph = tf.Graph()
 with graph.as_default():
@@ -143,9 +150,10 @@ with tf.Session(graph=graph) as sess:
     sess.run(init)
     summary_writer = tf.train.SummaryWriter('./logs/', graph=sess.graph)
     print ("Start optimization")
+    saver = tf.train.Saver()
     for epoch in range(training_epochs):
         avg_cost = 0.
-        total_batch = int(mnist.train.num_examples/batch_size)*2
+        total_batch = int(mnist.train.num_examples/batch_size)+20
         # Loop over all batches
         for i in range(total_batch):
             batch_xs, batch_ys = mnist.train.next_batch(batch_size)
@@ -156,6 +164,9 @@ with tf.Session(graph=graph) as sess:
             #                             seq_len: [nsteps for _ in xrange(batch_size)]}
             feed_dict={x: batch_xs, y: sparse_tuple_from([[value] for value in batch_ys]),\
                                          seq_len: [nsteps for _ in xrange(batch_size)]} 
+            #print "batch_ys 0:",batch_ys[0]
+            #print "batch_ys 1:",batch_ys[1]
+            #print "batch_ys 2:",batch_ys[2]
             '''
             feed_dict={x: batch_xs, y: batch_ys, istate: np.zeros((batch_size, 2*dimhidden))}
             '''
@@ -179,4 +190,11 @@ with tf.Session(graph=graph) as sess:
                                  seq_len: [nsteps for _ in xrange(batch_size)]}
             test_acc = sess.run(accr, feed_dict=feed_dict)
             print (" Test label error rate: %.3f" % (test_acc))
+            print("                   batch_ys is :  "+str(batch_tys[0])+"  "\
+                                    +str(batch_tys[1])\
+                                +"  "+str(batch_tys[2]))
+            p = sess.run(decoded[0],feed_dict=feed_dict)
+            print("prediction is :            ")
+            print(p[1]) 
+            saver.save(sess,'./logs/train_ctc.tfmodel',epoch)
 print ("Optimization Finished.")

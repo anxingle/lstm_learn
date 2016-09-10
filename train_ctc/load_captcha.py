@@ -32,9 +32,9 @@ def read_images(train_dir):
     data  = np.zeros((data_volume,ROW*COL))
     # label.shape = (volume,row,col,depth)
     #label = np.zeros((data_volume,1))
-    label = np.zeros((data_volume,1))
+    #label = np.zeros((data_volume,1))
     #当label长度不是5的时候
-    #label = np.zeros((data_volume,5))
+    label = np.zeros((data_volume,4))
     for loop in xrange(data_volume):
         image_name  =  images[images_list[loop]]
         image       =  os.path.join(train_dir,image_name)
@@ -52,16 +52,16 @@ def read_images(train_dir):
         image_name  =  image_name.split('_')[1]
         image_label =  image_name[:]
         #当label长度不是5的时候
-        '''
-        image_label = [0,0,0,0,0]
+        
+        image_label = [0,0,0,0]
         length_name = len(image_name)
         for i in xrange(length_name):
             image_label[i] = image_name[i]
-        if  length_name != 5:
+        if  length_name != 4:
             for j in xrange(length_name,5):
                 image_label[i] = 10
         #label.append(image_label)
-        '''
+        
         label[loop] = image_label 
     return data,label
 

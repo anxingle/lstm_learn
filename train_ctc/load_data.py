@@ -161,8 +161,10 @@ def read_data_sets(train_dir,
                    length_label=1,num_class=10,
                    dtype=dtypes.float32,
                    reshape=True,
-                   validation_size=5000):
+                   validation_size=500):
   train_images,train_labels = load.read_data(train_dir,one_hot)
+  print("shape of train_labels:          ")
+  print(train_labels.shape)
 
   test_images,test_labels   = load.read_data(test_dir,one_hot) 
 

@@ -1,5 +1,3 @@
 *.pyc
-data/
-logs/
 accuracy.txt
 tensorflow/
