@@ -88,8 +88,8 @@ nclasses = 10
 print ("MNIST loaded")
 
 # Training params
-training_epochs =  5000
-batch_size      =  1000
+training_epochs =  4000
+batch_size      =  1200
 display_step    =  10
 learning_rate   =  0.001
 num_layers      =  1
