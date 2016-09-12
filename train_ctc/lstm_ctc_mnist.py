@@ -83,7 +83,7 @@ ntrain, ntest, dim, nclasses \
 print "ntrain:  ",ntrain
 print "dim:     ",dim
 print "nclasses: ",nclasses
-nclasses = 10
+nclasses = 11
 
 print ("MNIST loaded")
 
@@ -91,7 +91,8 @@ print ("MNIST loaded")
 training_epochs =  4000
 batch_size      =  1200
 display_step    =  10
-learning_rate   =  0.001
+#learning_rate   =  0.001
+learning_rate   = 0.01
 num_layers      =  1
 
 # Recurrent neural network params
